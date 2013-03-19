@@ -243,8 +243,8 @@ class test(QtGui.QMainWindow):
         return t,data
 
     def on_pick(self,event):
-        print "HUH"
-        print event.x, event.y
+        print "Pick Event",event.x, event.y
+        pass
 
     def updateQuickPlot(self, node):
         try:
@@ -500,8 +500,7 @@ class BlitQT(FigureCanvas):
         print "hier",event
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
-
-
+        
     def offkey(self,event):
         print 'you pressed', event.key, event.xdata, event.ydata
 
@@ -535,24 +534,28 @@ class BlitQT(FigureCanvas):
             self.axes.set_ylim(ymin,ymax)
             self.axes.set_xlabel("time / s")
             self.axes.set_ylabel("signal / a.u.")
-            self.real_part, = self.axes.plot(new_t, new_real, marker='None', ls="-", color='r', label = "Real")
-            self.imag_part, = self.axes.plot(new_t, new_imag, marker='None', ls="-", color='b', label = "Imag")
+            self.real_part, = self.axes.plot(new_t, new_real, marker='None', ls="-", color='r', label = "Real", animated=True)
+            self.imag_part, = self.axes.plot(new_t, new_imag, marker='None', ls="-", color='b', label = "Imag", animated=True)
             self.axes.legend()
             # redraw the whole figure
-            self.draw()
-            self.axes_background = self.copy_from_bbox(self.axes.bbox)
         else:
-            self.restore_region(self.axes_background)
             # update the data
             self.real_part.set_xdata(new_t)
             self.real_part.set_ydata(new_real)
             self.imag_part.set_xdata(new_t)
             self.imag_part.set_ydata(new_imag)
-            # just draw the animated artist
+        # just draw the animated artist
+        if size_changed or need_autoscale:
+            self.draw()
+            self.axes_background = self.copy_from_bbox(self.axes.bbox)
+            for line in [self.real_part, self.imag_part]:
+                line.set_animated(False)
+            self.draw()
+        else:
+            self.restore_region(self.axes_background)
             for line in [self.real_part, self.imag_part]:
                 self.axes.draw_artist(line)
-            self.blit(self.axes.bbox)
-    
+            self.blit(self.axes.bbox())   
 
 if __name__ == "__main__":
     import sys
